@@ -70,9 +70,13 @@ h2{margin:0}
 .reviewCard{grid-column:1/-1;background:linear-gradient(120deg,#f2ac26,#ffd567);color:#16283d}
 .reviewCard .partDesc,.reviewCard .progressText{color:#604717}
 .reviewCard .partNo{color:#795300}
-.sectionHeader{display:flex;align-items:center;gap:14px;margin:8px 0 20px}
+.sectionHeader{display:flex;align-items:center;gap:14px;margin:8px 0 12px}
 .sectionIcon{width:55px;height:55px;border-radius:17px;display:grid;place-items:center;background:linear-gradient(145deg,var(--blue),var(--violet));font-size:28px}
 .sectionHeader p{margin:4px 0 0;color:var(--muted)}
+.partProgress{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 18px;padding:10px 13px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.045);color:var(--muted);font-size:13px;font-weight:850}
+.partProgress b{color:var(--text)}
+.progressTrack{height:7px;flex:1 1 180px;min-width:140px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.progressFill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--blue));border-radius:999px;transition:width .2s ease}
 .examCard{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:18px;padding:18px;margin:15px 0}
 .stimulus{background:#f6f8fb;color:#182b41;border-radius:15px;padding:18px;margin:12px 0 16px;line-height:1.55;box-shadow:inset 0 0 0 1px #d8e2ee}
 .stimulus h3,.stimulus h4{margin:0 0 10px;color:#0d2947}
@@ -226,17 +230,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
     </div>
   </section>
 
-  <section id="hubScreen" class="hidden">
-    <div class="hero">
-      <div>
-        <div class="eyebrow">Exam Dashboard</div>
-        <h1 style="font-size:clamp(30px,5vw,48px)">Choose a part</h1>
-        <p>Complete the seven parts in any order. Your answers are saved automatically.</p>
-      </div>
-      <div class="heroBadge"><span>Answered</span><b id="answeredOverall">0 / 27</b><span>25 short-answer items + 2 writing tasks</span></div>
-    </div>
-    <div id="partGrid" class="partGrid"></div>
-  </section>
+  <section id="hubScreen" class="hidden"></section>
 
   <section id="partScreen" class="hidden">
     <div class="sectionHeader">
@@ -246,27 +240,15 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
         <p id="sectionSubtitle"></p>
       </div>
     </div>
+    <div class="partProgress">
+      <span id="partProgressText"><b>Part 1 of 7</b></span>
+      <div class="progressTrack"><div id="progressFill" class="progressFill" style="width:14.3%"></div></div>
+      <span id="answeredProgress">Questions: 0 / 25 • Writing: 0 / 2</span>
+    </div>
     <div id="partContent" class="panel"></div>
   </section>
 
-  <section id="reviewScreen" class="hidden">
-    <div class="sectionHeader">
-      <div class="sectionIcon">✓</div>
-      <div>
-        <h2>Review & Submit</h2>
-        <p>Check your completion status before sending your answers for marking.</p>
-      </div>
-    </div>
-    <div class="panel">
-      <div id="reviewGrid" class="reviewGrid"></div>
-      <div id="reviewWarnings"></div>
-      <div class="navRow">
-        <button class="ghost" type="button" onclick="showHub()">← Back to Parts</button>
-        <button id="submitBtn" class="primary" type="button" onclick="submitExam()">Submit for Marking</button>
-      </div>
-      <div id="submitStatus"></div>
-    </div>
-  </section>
+  <section id="reviewScreen" class="hidden"></section>
 
   <section id="resultScreen" class="hidden">
     <div class="panel">
@@ -303,8 +285,8 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
 
 <div id="timeOverlay" class="timeOverlay hidden">
   <div style="font-size:28px">⏰</div>
-  <div style="flex:1"><b>Time is up.</b><div style="color:#ffd6dc;font-size:13px;margin-top:3px">Answers are now locked. Review the completion summary and submit your exam.</div></div>
-  <button class="primary" type="button" onclick="openReview()">Review</button>
+  <div style="flex:1"><b>Time is up.</b><div style="color:#ffd6dc;font-size:13px;margin-top:3px">Answers are now locked. Go to Part 7 and submit your exam.</div></div>
+  <button class="primary" type="button" onclick="openPart(7)">Go to Part 7</button>
 </div>
 
 <div id="toast" class="toast hidden"></div>
@@ -397,6 +379,7 @@ function blankState(code=""){
   return {
     code,
     startedAt:null,
+    currentPart:1,
     timeUp:false,
     submitted:false,
     answers:{
@@ -414,7 +397,10 @@ let timerHandle = null;
 function loadState(){
   try{
     const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
-    if(raw && raw.answers && Array.isArray(raw.answers.objective) && raw.answers.objective.length===20) return raw;
+    if(raw && raw.answers && Array.isArray(raw.answers.objective) && raw.answers.objective.length===20){
+      if(!raw.currentPart || raw.currentPart<1 || raw.currentPart>7) raw.currentPart=1;
+      return raw;
+    }
   }catch{}
   return blankState();
 }
@@ -445,9 +431,15 @@ function startOrResume(){
     if(!confirm(`This device currently has ${label} saved for another pupil. Start a new attempt for ${code} and replace the local saved copy?`)) return;
     state=blankState(code);
   }
+  const isNewAttempt=!state.startedAt;
   state.code=code;
-  if(!state.startedAt) state.startedAt=Date.now();
-  saveState();startTimer();showHub();
+  if(isNewAttempt){
+    state.startedAt=Date.now();
+    state.currentPart=1;
+  }
+  saveState();
+  startTimer();
+  openPart(isNewAttempt?1:(state.currentPart||1));
 }
 function clearSaved(){
   const currentCode = state.code || "this pupil";
@@ -495,46 +487,24 @@ function renderLockedNotice(){
 
 function showHub(){
   if(!state.startedAt){renderStart();return}
-  startTimer();showOnly("hubScreen");renderHub();
+  openPart(state.currentPart||1);
 }
-function renderHub(){
-  const partsProgress=[
-    `${answeredObjective(0,5)}/5 answered`,
-    `${answeredObjective(5,9)}/4 answered`,
-    `${answeredObjective(9,14)}/5 answered`,
-    `${answeredObjective(14,20)}/6 answered`,
-    `${answeredWords()}/5 answered`,
-    `${countWords(state.answers.part6)} words`,
-    `${countWords(state.answers.part7)} words`
-  ];
-  const complete=[
-    answeredObjective(0,5)===5,
-    answeredObjective(5,9)===4,
-    answeredObjective(9,14)===5,
-    answeredObjective(14,20)===6,
-    answeredWords()===5,
-    countWords(state.answers.part6)>0,
-    countWords(state.answers.part7)>0
-  ];
-  const totalAnswered=state.answers.objective.filter(Boolean).length+answeredWords()+(state.answers.part6.trim()?1:0)+(state.answers.part7.trim()?1:0);
-  $("#answeredOverall").textContent=`${totalAnswered} / 27`;
-  $("#partGrid").innerHTML=PARTS.map((p,i)=>`
-    <button class="partCard" type="button" onclick="openPart(${p.id})">
-      <div class="partTop"><div class="partIcon">${p.icon}</div><div><div class="partNo">PART ${p.id} • ${p.marks} MARK${p.marks===1?"":"S"}</div><div class="partTitle">${p.title}</div><div class="partDesc">${p.desc}</div></div></div>
-      <div class="cardFoot"><span class="${complete[i]?"doneText":"progressText"}">${complete[i]?"✓ Complete":"In progress"}</span><span>${partsProgress[i]}</span></div>
-    </button>`).join("")+`
-    <button class="partCard reviewCard" type="button" onclick="openReview()">
-      <div class="partTop"><div class="partIcon">✅</div><div><div class="partNo">FINAL STEP</div><div class="partTitle">Review & Submit</div><div class="partDesc">Check missing answers, then send the full paper for marking and leaderboard recording.</div></div></div>
-      <div class="cardFoot"><span class="progressText">${state.timeUp?"Time up — submit now":"Submit when ready"}</span><span>50 marks →</span></div>
-    </button>`;
-}
-
 function openPart(id){
+  if(!state.startedAt){renderStart();return}
+  id=Math.min(7,Math.max(1,Number(id)||1));
+  state.currentPart=id;
+  saveState();
+  startTimer();
   showOnly("partScreen");
   const p=PARTS[id-1];
   $("#sectionIcon").textContent=p.icon;
   $("#sectionTitle").textContent=`Part ${id}: ${p.title}`;
   $("#sectionSubtitle").textContent=`${p.marks} mark${p.marks===1?"":"s"}`;
+  $("#partProgressText").innerHTML=`<b>Part ${id} of 7</b> • ${p.title} • ${p.marks} mark${p.marks===1?"":"s"}`;
+  const shortAnswered=state.answers.objective.filter(Boolean).length+answeredWords();
+  const writingAnswered=(state.answers.part6.trim()?1:0)+(state.answers.part7.trim()?1:0);
+  $("#answeredProgress").textContent=`Questions: ${shortAnswered} / 25 • Writing: ${writingAnswered} / 2`;
+  $("#progressFill").style.width=`${(id/7)*100}%`;
   $("#partContent").innerHTML=renderPart(id);
   bindPart(id);
   renderLockedNotice();
@@ -631,7 +601,14 @@ function renderPart7(){
   </div>${navButtons()}`;
 }
 function navButtons(){
-  return `<div class="navRow"><button class="ghost" type="button" onclick="showHub()">← Save & Return to Parts</button><button class="primary" type="button" onclick="openReview()">Review & Submit →</button></div>`;
+  const id=state.currentPart||1;
+  const left=id>1
+    ? `<button class="ghost" type="button" onclick="openPart(${id-1})">← Part ${id-1}</button>`
+    : `<span></span>`;
+  const right=id<7
+    ? `<button class="primary" type="button" onclick="openPart(${id+1})">Part ${id+1} →</button>`
+    : `<button id="submitBtn" class="primary" type="button" onclick="submitExam()">Submit</button>`;
+  return `<div class="navRow">${left}${right}</div><div id="submitStatus"></div>`;
 }
 function esc(v){return String(v??"").replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]))}
 function bindPart(id){
@@ -664,42 +641,12 @@ function bindPart(id){
   }
 }
 
-function openReview(){
-  showOnly("reviewScreen");renderReview();
-}
-function renderReview(){
-  const vals=[
-    ["Part 1",`${answeredObjective(0,5)}/5 answered`],
-    ["Part 2",`${answeredObjective(5,9)}/4 answered`],
-    ["Part 3",`${answeredObjective(9,14)}/5 answered`],
-    ["Part 4",`${answeredObjective(14,20)}/6 answered`],
-    ["Part 5",`${answeredWords()}/5 answered`],
-    ["Part 6",`${countWords(state.answers.part6)} words`],
-    ["Part 7",`${countWords(state.answers.part7)} words`]
-  ];
-  $("#reviewGrid").innerHTML=vals.map(v=>`<div class="reviewItem"><b>${v[0]}</b><small>${v[1]}</small></div>`).join("");
-  const missingObj=20-state.answers.objective.filter(Boolean).length;
-  const missingWords=5-answeredWords();
-  const p6=countWords(state.answers.part6),p7=countWords(state.answers.part7);
-  let warnings=[];
-  if(missingObj) warnings.push(`${missingObj} objective question${missingObj===1?" is":"s are"} unanswered.`);
-  if(missingWords) warnings.push(`${missingWords} word-completion question${missingWords===1?" is":"s are"} unanswered.`);
-  if(!p6) warnings.push("Part 6 is blank.");
-  else if(p6<30||p6>50) warnings.push(`Part 6 has ${p6} words; the suggested range is 30–50.`);
-  if(!p7) warnings.push("Part 7 is blank.");
-  else if(p7<60||p7>80) warnings.push(`Part 7 has ${p7} words; the suggested range is 60–80.`);
-  $("#reviewWarnings").innerHTML=warnings.length
-    ? `<div class="warning"><b>Before submitting:</b><ul>${warnings.map(x=>`<li>${x}</li>`).join("")}</ul>You may still submit with unanswered items.</div>`
-    : `<div class="success"><b>All sections have responses.</b> You can submit when ready.</div>`;
-  $("#submitBtn").disabled=state.submitted;
-  $("#submitStatus").innerHTML="";
-}
-
 async function submitExam(){
   if(state.submitted && state.result){renderResult();return}
-  if(!confirm("Submit your final answers for marking? You will not be able to edit this saved attempt afterwards.")) return;
+  if(!confirm("Are you sure you want to submit? You cannot change your answers after submission.")) return;
   const btn=$("#submitBtn"),status=$("#submitStatus");
-  btn.disabled=true;status.innerHTML=`<div class="success"><span class="spinner"></span><b>Marking your exam…</b><br><span style="font-size:13px">Parts 6 and 7 may take a little longer because they are assessed using the writing rubric.</span></div>`;
+  if(btn) btn.disabled=true;
+  if(status) status.innerHTML=`<div class="success"><span class="spinner"></span><b>Marking your exam…</b><br><span style="font-size:13px">Parts 6 and 7 may take a little longer because they are assessed using the writing rubric.</span></div>`;
   try{
     const res=await fetch(`${CONFIG.baseUrl}/functions/v1/submit-attempt`,{
       method:"POST",
@@ -717,8 +664,9 @@ async function submitExam(){
     if(!res.ok||!data.success) throw new Error(data.error||"Submission failed");
     state.submitted=true;state.result=data;saveState();stopTimer();$("#timeOverlay").classList.add("hidden");renderResult();
   }catch(err){
-    console.error(err);btn.disabled=false;
-    status.innerHTML=`<div class="error"><b>Submission was not completed.</b><br>${esc(err.message||"Please check the internet connection and try again.")}<br><small>Your answers are still saved on this device.</small></div>`;
+    console.error(err);
+    if(btn) btn.disabled=false;
+    if(status) status.innerHTML=`<div class="error"><b>Submission was not completed.</b><br>${esc(err.message||"Please check the internet connection and try again.")}<br><small>Your answers are still saved on this device.</small></div>`;
   }
 }
 function renderResult(){
@@ -791,7 +739,7 @@ $("#pupilCode").addEventListener("keydown",e=>{if(e.key==="Enter")startOrResume(
 window.addEventListener("beforeunload",saveState);
 
 if(state.submitted&&state.result){$("#pupilCode").value=state.code;renderResult()}
-else if(state.startedAt&&state.code){startTimer();showHub()}
+else if(state.startedAt&&state.code){startTimer();openPart(state.currentPart||1)}
 else renderStart();
 </script>
 </body>
