@@ -139,6 +139,10 @@ h2{margin:0}
 .leader.header{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase}
 .leader.me{background:rgba(57,230,208,.1);border-radius:12px}
 .rank{font-weight:950;color:var(--gold)}
+.leaderTabs{display:flex;gap:8px;margin:4px 0 14px;padding:5px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035)}
+.leaderTab{flex:1;border:0;border-radius:10px;padding:10px 12px;background:transparent;color:var(--muted);font-weight:950}
+.leaderTab.active{background:linear-gradient(100deg,var(--cyan),var(--blue));color:#062038}
+.attemptMeta{margin-top:3px;font-size:11px;color:var(--muted);font-weight:750}
 .testerToggle{display:flex;align-items:center;gap:9px;margin:2px 0 15px;padding:11px 13px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.045);font-size:13px;font-weight:850;color:var(--muted)}
 .testerToggle input{accent-color:var(--cyan);width:18px;height:18px}
 .testerTag{display:inline-block;margin-left:7px;padding:2px 7px;border-radius:999px;background:rgba(154,108,255,.15);border:1px solid rgba(154,108,255,.35);color:#d7c6ff;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.5px}
@@ -277,6 +281,10 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
     <div class="modalHead">
       <h2 style="flex:1">🏆 Leaderboard</h2>
       <button class="iconBtn" type="button" onclick="closeLeaderboard()">✕</button>
+    </div>
+    <div class="leaderTabs">
+      <button id="leaderTabResult" class="leaderTab active" type="button">Result</button>
+      <button id="leaderTabBest" class="leaderTab" type="button">Best Attempt</button>
     </div>
     <label class="testerToggle"><input id="showTesters" type="checkbox"> Show testers' results</label>
     <div id="leaderContent"><span class="spinner"></span>Loading leaderboard…</div>
@@ -702,7 +710,14 @@ function returnToStart(){
   renderStart();
 }
 
-async function openLeaderboard(){
+let leaderboardMode="result";
+function setLeaderboardMode(mode){
+  leaderboardMode=mode==="best"?"best":"result";
+  $("#leaderTabResult")?.classList.toggle("active",leaderboardMode==="result");
+  $("#leaderTabBest")?.classList.toggle("active",leaderboardMode==="best");
+}
+async function openLeaderboard(mode=leaderboardMode){
+  setLeaderboardMode(mode);
   $("#leaderModal").classList.remove("hidden");
   $("#leaderContent").innerHTML=`<span class="spinner"></span>Loading leaderboard…`;
   try{
@@ -717,12 +732,23 @@ async function openLeaderboard(){
     });
     const data=await res.json();
     if(!res.ok||!data.success) throw new Error(data.error||"Could not load leaderboard");
+
     const me=state.result?.pupil;
-    if(!data.leaderboard?.length){$("#leaderContent").innerHTML=`<div class="note">No completed results yet.</div>`;return}
+    const rows=leaderboardMode==="best"
+      ?(data.bestAttemptLeaderboard||data.leaderboard||[])
+      :(data.resultLeaderboard||data.leaderboard||[]);
+
+    if(!rows.length){
+      $("#leaderContent").innerHTML=`<div class="note">No completed results yet.</div>`;
+      return;
+    }
+
     $("#leaderContent").innerHTML=`<div class="leader header"><div>Rank</div><div>Pupil</div><div class="classCol">Class</div><div>Score</div></div>`+
-      data.leaderboard.map(x=>{
+      rows.map(x=>{
         const mine=me&&x.name===me.name&&x.class===me.class;
-        return `<div class="leader ${mine?"me":""}"><div class="rank">#${x.rank}</div><div><b>${esc(x.name)}</b>${x.isTester?'<span class="testerTag">Tester</span>':""}</div><div class="classCol">${esc(x.class||"")}</div><div><b>${x.score}/${x.maximumScore}</b></div></div>`;
+        const attempts=Number(x.attemptCount||1);
+        const attemptMeta=attempts>1?`<div class="attemptMeta">${attempts} attempts</div>`:"";
+        return `<div class="leader ${mine?"me":""}"><div class="rank">#${x.rank}</div><div><b>${esc(x.name)}</b>${x.isTester?'<span class="testerTag">Tester</span>':""}${attemptMeta}</div><div class="classCol">${esc(x.class||"")}</div><div><b>${x.score}/${x.maximumScore}</b></div></div>`;
       }).join("");
   }catch(err){
     $("#leaderContent").innerHTML=`<div class="error">${esc(err.message||"Could not load leaderboard.")}</div>`;
@@ -733,8 +759,10 @@ function closeLeaderboard(){$("#leaderModal").classList.add("hidden")}
 $("#startBtn").addEventListener("click",startOrResume);
 $("#clearBtn").addEventListener("click",clearSaved);
 $("#resetAttemptBtn").addEventListener("click",clearSaved);
-$("#leaderBtnTop").addEventListener("click",openLeaderboard);
-$("#showTesters").addEventListener("change",openLeaderboard);
+$("#leaderBtnTop").addEventListener("click",()=>openLeaderboard());
+$("#showTesters").addEventListener("change",()=>openLeaderboard(leaderboardMode));
+$("#leaderTabResult").addEventListener("click",()=>openLeaderboard("result"));
+$("#leaderTabBest").addEventListener("click",()=>openLeaderboard("best"));
 $("#pupilCode").addEventListener("keydown",e=>{if(e.key==="Enter")startOrResume()});
 window.addEventListener("beforeunload",saveState);
 
