@@ -150,6 +150,12 @@ h2{margin:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;z-index:200;left:50%;bottom:22px;transform:translateX(-50%);background:#061524;border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--shadow);font-weight:850}
 .timeOverlay{position:fixed;z-index:90;inset:auto 18px 18px 18px;max-width:720px;margin:auto;background:#3b1b20;border:1px solid rgba(255,107,122,.5);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center}
+.set2Float{position:fixed;z-index:45;right:16px;top:50%;transform:translateY(-50%);min-width:154px;border:1px solid rgba(255,200,87,.72);border-radius:18px;padding:13px 15px;background:linear-gradient(145deg,#ffd86f,#ff9d4d);color:#2d1c05;box-shadow:0 15px 42px rgba(255,157,77,.32);font-weight:1000;text-align:center;animation:set2Pulse 1.55s ease-in-out infinite}
+.set2Float strong,.set2Float span{display:block}.set2Float strong{font-size:13px;letter-spacing:.2px}.set2Float span{font-size:18px;margin-top:2px}
+@keyframes set2Pulse{0%,100%{transform:translateY(-50%) scale(1);box-shadow:0 15px 42px rgba(255,157,77,.28)}50%{transform:translateY(-50%) scale(1.055);box-shadow:0 18px 54px rgba(255,200,87,.52)}}
+.setTag{display:inline-block;margin-top:10px;padding:6px 11px;border-radius:999px;background:rgba(255,200,87,.14);border:1px solid rgba(255,200,87,.35);color:var(--gold);font-size:12px;font-weight:950;letter-spacing:.8px;text-transform:uppercase}
+.leaderSetTabs{display:flex;gap:8px;margin:0 0 10px}.leaderSetTab{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:rgba(255,255,255,.04);color:var(--muted);font-weight:900}.leaderSetTab.active{background:rgba(255,200,87,.16);border-color:rgba(255,200,87,.42);color:#ffe5a6}
+.unlockBox{text-align:center}.unlockIcon{font-size:52px;margin:4px 0 10px}.unlockBox p{color:var(--muted);line-height:1.55}
 .printOnly{display:none}
 footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
 @media(max-width:800px){
@@ -170,6 +176,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
   .wrap{padding:18px 12px 56px}
   .panel{padding:16px}
   .timer{font-size:13px}
+  .set2Float{right:8px;min-width:126px;padding:10px 11px}.set2Float strong{font-size:11px}.set2Float span{font-size:15px}
 }
 @media print{
   body{background:#fff;color:#000}
@@ -190,6 +197,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
     <div id="pupilBadge" class="pill hidden"></div>
     <div id="timer" class="timer hidden">01:15:00</div>
     <button id="resetAttemptBtn" class="iconBtn hidden" type="button">↩ Reset / Change Pupil</button>
+    <button id="set1BackBtn" class="iconBtn hidden" type="button">← Set 1</button>
     <button id="leaderBtnTop" class="iconBtn" type="button">🏆 Leaderboard</button>
   </div>
 </header>
@@ -200,6 +208,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
       <div>
         <div class="eyebrow">Ujian Akhir Sesi Akademik 2026</div>
         <h1>Bahasa Inggeris<br>Year 6</h1>
+        <div id="heroSetLabel" class="setTag">Set 1</div>
         <p>A standalone seven-part exam game based on the 2026 paper. Your answers are saved on this device while you work. Final marking is done securely through the school assessment backend.</p>
       </div>
       <div class="heroBadge"><span>Total</span><b>50 marks</b><span>1 hour 15 minutes</span></div>
@@ -256,7 +265,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
 
   <section id="resultScreen" class="hidden">
     <div class="panel">
-      <div class="printOnly"><h2>UPDLP English Year 6 — 2026 Result</h2></div>
+      <div class="printOnly"><h2 id="printResultTitle">UPDLP English Year 6 — 2026 Result</h2></div>
       <div class="resultHero">
         <div class="eyebrow">Exam completed</div>
         <div class="bigScore"><span id="totalScore">0</span><span style="font-size:.42em;color:var(--muted)"> / 50</span></div>
@@ -268,6 +277,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
       <div class="navRow noPrint">
         <button class="ghost" type="button" onclick="window.print()">🖨 Print Result</button>
         <button class="ghost" type="button" onclick="openLeaderboard()">🏆 View Leaderboard</button>
+        <span id="resultActionSlot"></span>
         <button class="primary" type="button" onclick="returnToStart()">Done</button>
       </div>
     </div>
@@ -279,8 +289,12 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
 <div id="leaderModal" class="modal hidden">
   <div class="modalBox">
     <div class="modalHead">
-      <h2 style="flex:1">🏆 Leaderboard</h2>
+      <h2 id="leaderTitle" style="flex:1">🏆 Leaderboard • Set 1</h2>
       <button class="iconBtn" type="button" onclick="closeLeaderboard()">✕</button>
+    </div>
+    <div class="leaderSetTabs">
+      <button id="leaderSet1" class="leaderSetTab active" type="button">Set 1</button>
+      <button id="leaderSet2" class="leaderSetTab hidden" type="button">Set 2</button>
     </div>
     <div class="leaderTabs">
       <button id="leaderTabResult" class="leaderTab active" type="button">Result</button>
@@ -297,16 +311,41 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
   <button class="primary" type="button" onclick="openPart(7)">Go to Part 7</button>
 </div>
 
+<button id="set2FloatBtn" class="set2Float hidden" type="button" onclick="openSet2Confirm()"><strong>UPDLP English</strong><span>Set 2</span></button>
+
+<div id="set2ConfirmModal" class="modal hidden">
+  <div class="modalBox" style="width:min(520px,100%)">
+    <div class="modalHead"><h2 style="flex:1">Open Set 2?</h2><button class="iconBtn" type="button" onclick="closeSet2Confirm()">✕</button></div>
+    <p style="color:var(--muted);line-height:1.55">You have unlocked UPDLP English Set 2 by achieving at least 41/50 in Set 1. Your Set 1 attempt will remain saved.</p>
+    <div class="navRow"><button class="ghost" type="button" onclick="closeSet2Confirm()">Cancel</button><button class="primary" type="button" onclick="confirmSwitchToSet2()">Open Set 2</button></div>
+  </div>
+</div>
+
+<div id="unlockModal" class="modal hidden">
+  <div class="modalBox unlockBox" style="width:min(520px,100%)">
+    <div class="unlockIcon">🎉</div>
+    <h2>Set 2 of the exam is now available!</h2>
+    <p>You achieved the required score in Set 1. The pulsating <b>UPDLP English • Set 2</b> button on the right side of the screen is now permanently available for this pupil.</p>
+    <button class="primary" type="button" onclick="closeUnlockModal()">Got it</button>
+  </div>
+</div>
+
 <div id="toast" class="toast hidden"></div>
 
 <script>
 const CONFIG = {
-  assessmentCode: "UPDLP-PRACTICE-01",
+  assessmentCodes: {1:"UPDLP-PRACTICE-01",2:"UPDLP-PRACTICE-02"},
   baseUrl: "https://qekcgsfeomjckctiubgm.supabase.co",
   publishableKey: "sb_publishable_yJbCYOLDeMreuqM01g_oqA_eF5YEWwq",
-  durationMs: 75 * 60 * 1000
+  durationMs: 75 * 60 * 1000,
+  set2Threshold: 41
 };
-const STORAGE_KEY = "updpl_y6_2026_exam_v1";
+const STORAGE_KEYS = {1:"updpl_y6_2026_exam_v1",2:"updpl_y6_2026_exam_set2_v1"};
+const ACTIVE_SET_KEY = "updpl_y6_2026_active_set";
+let currentSet = Number(localStorage.getItem(ACTIVE_SET_KEY)||1)===2 ? 2 : 1;
+let accessState = {checked:false,unlocked:false,bestSet1Score:0,pupil:null};
+function assessmentCodeFor(setNo=currentSet){return CONFIG.assessmentCodes[setNo]||CONFIG.assessmentCodes[1]}
+function storageKeyFor(setNo=currentSet){return STORAGE_KEYS[setNo]||STORAGE_KEYS[1]}
 
 const PARTS = [
   {id:1,icon:"🛰️",title:"Short Texts",marks:5,desc:"Questions 1–5 • Choose A, B or C."},
@@ -383,9 +422,51 @@ const P5 = [
   {n:25,first:"r",hint:"r _ _ _ _ _",desc:"To save someone or something from a dangerous situation."}
 ];
 
+const P1_SET2 = [
+  {n:1,stimulus:`<div class="stimulus"><h3>NOTICE: Eco-Brick Recycling Scheme</h3><p>Please rinse and <b>completely dry</b> all plastic packaging before compacting it into the plastic bottles provided at the recycling centre. Bins containing unwashed or damp items will be rejected entirely from the inter-class environment championship score.</p></div>`,q:"From the notice, we know that the pupils",opts:["can submit wet items if they are placed inside the bottles.","must ensure the plastic waste is clean and dry before disposal.","will receive extra marks for sorting their items inside the classroom."]},
+  {n:2,stimulus:`<div class="stimulus"><p><b>Zara:</b> Hi Liam, did you manage to book the tickets for the evening space simulation programme at the National Planetarium this weekend?</p><p><b>Liam:</b> Hi Zara. The evening slots were completely sold out, but I managed to secure two seats for the morning session on Sunday instead. The exhibition is closed on Saturdays.</p><p><b>Zara:</b> Brilliant! That actually suits my schedule much better.</p></div>`,q:"When will Zara and Liam go to the National Planetarium?",opts:["Saturday morning.","Sunday evening.","Sunday morning."]},
+  {n:3,stimulus:`<div class="stimulus"><h3>Extract from Aishah's Diary</h3><p>Last night, the heavy downpour caused flash floods down our street. Just as the water level started rising rapidly towards our porch, the rescue team arrived in a motorized dinghy. Thanks to our emergency preparedness kit, we grabbed our crucial documents and evacuated smoothly without panicked behaviour.</p></div>`,q:"Why was Aishah's family able to evacuate smoothly?",opts:["The rescue team arrived before the rain started.","They were well-equipped with an emergency kit.","They managed to stop the floodwater from entering the porch."]},
+  {n:4,stimulus:`<div class="poster"><h3 style="font-size:30px">Symphony Music Centre</h3><p><b>Discover the Magic of Traditional Sounds!</b></p><p><b>Sign up for our Traditional Orchestral Programme before 31st May &amp; receive a FREE Traditional Flute (Seruling)!</b></p><div class="noticeGrid"><div><h4>Group Lessons</h4><p>Every Weekend</p></div><div><h4>Private One-to-One Tuition</h4><p>Friday Evenings Only</p></div></div><p><b>Enroll Now!</b></p></div>`,q:"Which of the following is true about Symphony Music Centre?",opts:["Private tutoring sessions are held during weekends.","Students get a free flute if they register before June.","The centre only teaches modern orchestral instruments."]},
+  {n:5,stimulus:`<div class="stimulus"><h3>Virtual Museum Exhibition</h3><p><b>To:</b> raj_singh@kmail.co.uk</p><p><b>Subject:</b> Virtual Museum Exhibition</p><p>Dear Raj,</p><p>Our history teacher wants us to access the virtual museum link to research how people travelled in the 19th century. We need to complete the digital worksheet by Wednesday morning, but the website will undergo maintenance all day on Tuesday.</p><p>Regards,<br>Henry</p></div>`,q:"Based on the email, Henry is advising Raj to",opts:["submit the digital worksheet on Tuesday.","complete the digital worksheet before Tuesday.","visit a physical museum to look at old transport vehicles."]}
+];
+
+const P2_OPTS_SET2 = [
+  {n:6,opts:["convert","converts","converted"]},
+  {n:7,opts:["trek","treks","trekked"]},
+  {n:8,opts:["produce","produces","produced"]},
+  {n:9,opts:["encourage","encourages","encouraged"]}
+];
+
+const P3_SET2 = [
+  {n:10,q:"Why did Ethan's father purchase specific gear before the trip?",opts:["The national park requires all tourists to wear matching clothes.","They needed to be prepared for the difficult terrain and sudden rain.","Encik Rahman refused to guide them unless they had new equipment."]},
+  {n:11,q:"What did Ethan encounter while exploring the interior of the Deer Cave?",opts:["A massive column of black smoke rising from the ground.","Thousands of cave-dwelling creatures living in the dark.","A local expert hunting for rare insects on the ceiling."]},
+  {n:12,q:"In paragraph 3, the phrase natural spectacle refers to the",opts:["unique insects crawling on the dark cave floor.","deep cave passages stretching across the park.","massive flight of bats leaving the cave at sunset."]},
+  {n:13,q:"Which of the following is true about Gunung Mulu National Park?",opts:["It is a globally famous destination situated in East Malaysia.","The weather there is highly predictable throughout the year.","It is an artificial park built specifically for holiday tourists."]},
+  {n:14,q:"How did the trip affect Ethan?",opts:["He decided to become a professional cave guide in Sarawak.","He developed a profound appreciation for protecting nature.","He felt exhausted and regretted going on a wilderness expedition."]}
+];
+
+const P4_SET2 = [
+  {n:15,q:"This individual built a functional item using recycled consumer waste materials."},
+  {n:16,q:"This person encountered challenging environmental and biological discomforts on the trip."},
+  {n:17,q:"This pupil had to deliver an oral presentation about an invention to academic professionals."},
+  {n:18,q:"This participant struggled with the cognitive task of remembering music by ear alone."},
+  {n:19,q:"This person had to transport weighty defensive gear throughout the holiday activity."},
+  {n:20,q:"This individual expresses a keen desire to learn a cultural woodwind instrument next."}
+];
+
+const P5_SET2 = [
+  {n:21,first:"p",hint:"p _ _ _ _ _ _ _ _",desc:"An international spelling variant for a dynamic, public display or scheduled group activity."},
+  {n:22,first:"e",hint:"e _ _ _ _ _ _ _ _ _",desc:"A violent and sudden geological event that causes severe earth tremors and structural ruin."},
+  {n:23,first:"j",hint:"j _ _ _ _ _ _ _ _",desc:"Ornamental decorative items like rings or necklaces made from precious metals or stones."},
+  {n:24,first:"f",hint:"f _ _ _ _ _ _",desc:"A systematic structure or plant where raw materials are processed into consumer goods."},
+  {n:25,first:"p",hint:"p _ _ _ _ _ _ _ _",desc:"Liquid or solid waste materials that cause environmental damage when released carelessly."}
+];
+
+
 function blankState(code=""){
   return {
     code,
+    setNo:currentSet,
     startedAt:null,
     currentPart:1,
     timeUp:false,
@@ -399,20 +480,21 @@ function blankState(code=""){
     result:null
   };
 }
-let state = loadState();
+let state = loadState(currentSet);
 let timerHandle = null;
 
-function loadState(){
+function loadState(setNo=currentSet){
   try{
-    const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null");
+    const raw=JSON.parse(localStorage.getItem(storageKeyFor(setNo))||"null");
     if(raw && raw.answers && Array.isArray(raw.answers.objective) && raw.answers.objective.length===20){
       if(!raw.currentPart || raw.currentPart<1 || raw.currentPart>7) raw.currentPart=1;
+      raw.setNo=setNo;
       return raw;
     }
   }catch{}
   return blankState();
 }
-function saveState(){ localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); }
+function saveState(){ state.setNo=currentSet; localStorage.setItem(storageKeyFor(currentSet),JSON.stringify(state)); }
 function $(s){return document.querySelector(s)}
 function showOnly(id){
   ["startScreen","hubScreen","partScreen","reviewScreen","resultScreen"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==id));
@@ -428,11 +510,78 @@ function countWords(text){
 function answeredObjective(start,end){return state.answers.objective.slice(start,end).filter(Boolean).length}
 function answeredWords(){return state.answers.words.filter(x=>String(x).trim()).length}
 function isLocked(){return state.timeUp || state.submitted}
+function isSet2(){return currentSet===2}
+function unlockSeenKey(code){return `updpl_y6_set2_unlock_seen_${String(code||"").trim().toUpperCase()}`}
 
-function startOrResume(){
+async function refreshAccessStatus(code=state.code, quiet=true){
+  const pupilCode=String(code||"").trim();
+  if(!pupilCode){accessState={checked:false,unlocked:false,bestSet1Score:0,pupil:null};updateSet2UI();return accessState}
+  try{
+    const res=await fetch(`${CONFIG.baseUrl}/functions/v1/get-updlp-access`,{
+      method:"POST",headers:{"Content-Type":"application/json","apikey":CONFIG.publishableKey},
+      body:JSON.stringify({pupilCode})
+    });
+    const data=await res.json();
+    if(!res.ok||!data.success) throw new Error(data.error||"Could not check Set 2 access");
+    accessState={checked:true,unlocked:data.set2Unlocked===true,bestSet1Score:Number(data.bestSet1Score||0),pupil:data.pupil||null};
+  }catch(err){
+    accessState={checked:false,unlocked:false,bestSet1Score:0,pupil:null};
+    if(!quiet) toast(err.message||"Could not check Set 2 access.");
+  }
+  updateSet2UI();
+  return accessState;
+}
+function updateSet2UI(){
+  const btn=$("#set2FloatBtn");
+  const knownCode=String(state?.code||$("#pupilCode")?.value||"").trim();
+  if(btn) btn.classList.toggle("hidden",!(accessState.unlocked && currentSet===1 && knownCode));
+  $("#leaderSet2")?.classList.toggle("hidden",!accessState.unlocked);
+  $("#set1BackBtn")?.classList.toggle("hidden",currentSet!==2);
+}
+function updateSetLabels(){
+  const label=`Set ${currentSet}`;
+  if($("#heroSetLabel")) $("#heroSetLabel").textContent=label;
+  if($(".brandTitle")) $(".brandTitle").textContent=`UPDLP English Quest 2026 • ${label}`;
+  if($("#startBtn")) $("#startBtn").textContent=`Start / Resume ${label}`;
+  document.title=`UPDLP English Quest 2026 — Year 6 — ${label}`;
+  updateSet2UI();
+}
+function openSet2Confirm(){
+  if(!accessState.unlocked){toast("Set 2 is still locked. Achieve at least 41/50 in Set 1 first.");return}
+  $("#set2ConfirmModal").classList.remove("hidden");
+}
+function closeSet2Confirm(){$("#set2ConfirmModal").classList.add("hidden")}
+function closeUnlockModal(){$("#unlockModal").classList.add("hidden")}
+function confirmSwitchToSet2(){closeSet2Confirm();switchSet(2)}
+function switchSet(setNo){
+  setNo=Number(setNo)===2?2:1;
+  if(setNo===2 && !accessState.unlocked){toast("Set 2 is locked until you achieve at least 41/50 in Set 1.");return}
+  const previousCode=state.code||$("#pupilCode")?.value.trim()||"";
+  saveState();stopTimer();$("#timeOverlay").classList.add("hidden");
+  currentSet=setNo;localStorage.setItem(ACTIVE_SET_KEY,String(currentSet));
+  state=loadState(currentSet);
+  if(!state.code && previousCode){state.code=previousCode;saveState()}
+  renderStart();
+}
+function maybeShowUnlockPopup(){
+  if(currentSet!==1 || !state.result || Number(state.result?.scores?.total||0)<CONFIG.set2Threshold || !accessState.unlocked) return;
+  const key=unlockSeenKey(state.code);
+  if(localStorage.getItem(key)==="1") return;
+  localStorage.setItem(key,"1");
+  $("#unlockModal").classList.remove("hidden");
+}
+function reattemptCurrentSet(){
+  const code=state.code;
+  state=blankState(code);saveState();stopTimer();$("#timeOverlay").classList.add("hidden");
+  renderStart();toast(`Set ${currentSet} is ready for another attempt.`);
+}
+
+async function startOrResume(){
   const code=$("#pupilCode").value.trim();
   const msg=$("#startMsg");msg.className="hidden";msg.textContent="";
   if(!code){msg.className="error";msg.textContent="Enter your pupil code first.";return}
+  await refreshAccessStatus(code,true);
+  if(currentSet===2 && !accessState.unlocked){msg.className="error";msg.textContent="Set 2 is locked. You need a best Set 1 score of at least 41/50.";return}
   if(state.submitted && state.code===code && state.result){renderResult();return}
   if(state.code && state.code!==code){
     const label=state.submitted?"a completed result":"an unfinished attempt";
@@ -451,9 +600,10 @@ function startOrResume(){
 }
 function clearSaved(){
   const currentCode = state.code || "this pupil";
-  if(!confirm(`Reset the saved attempt for ${currentCode}?\n\nThe local timer and answers on this device will be erased. A submitted result in the online system will NOT be deleted.`)) return;
+  if(!confirm(`Reset the saved Set ${currentSet} attempt for ${currentCode}?\n\nThe local timer and answers for this set on this device will be erased. A submitted result in the online system will NOT be deleted.`)) return;
   state=blankState();
   saveState();
+  accessState={checked:false,unlocked:false,bestSet1Score:0,pupil:null};
   $("#pupilCode").value="";
   stopTimer();
   $("#timeOverlay").classList.add("hidden");
@@ -462,6 +612,7 @@ function clearSaved(){
 }
 function renderStart(){
   showOnly("startScreen");
+  updateSetLabels();
   $("#pupilCode").value=state.code||"";
   $("#timer").classList.add("hidden");
   $("#pupilBadge").classList.add("hidden");
@@ -505,9 +656,10 @@ function openPart(id){
   startTimer();
   showOnly("partScreen");
   const p=PARTS[id-1];
+  const setLabel=`Set ${currentSet}`;
   $("#sectionIcon").textContent=p.icon;
   $("#sectionTitle").textContent=`Part ${id}: ${p.title}`;
-  $("#sectionSubtitle").textContent=`${p.marks} mark${p.marks===1?"":"s"}`;
+  $("#sectionSubtitle").textContent=`${setLabel} • ${p.marks} mark${p.marks===1?"":"s"}`;
   $("#partProgressText").innerHTML=`<b>Part ${id} of 7</b> • ${p.title} • ${p.marks} mark${p.marks===1?"":"s"}`;
   const shortAnswered=state.answers.objective.filter(Boolean).length+answeredWords();
   const writingAnswered=(state.answers.part6.trim()?1:0)+(state.answers.part7.trim()?1:0);
@@ -533,33 +685,46 @@ function choiceBlock(n,q,opts){
   }</div></div>`;
 }
 function renderPart1(){
+  const items=isSet2()?P1_SET2:P1;
   return `<div class="note">Read each text carefully. Choose the correct answer A, B or C.</div>`+
-  P1.map(x=>x.stimulus+choiceBlock(x.n,x.q,x.opts)).join("")+navButtons();
+  items.map(x=>x.stimulus+choiceBlock(x.n,x.q,x.opts)).join("")+navButtons();
 }
 function renderPart2(){
-  const passage=`<div class="stimulus"><h3>The Brave Lifeguard</h3>
+  const passage=isSet2()?`<div class="stimulus"><h3>The Invention of the Solar Backpack</h3>
+  <p>The modern solar backpack is a marvellous innovation designed for tech-savvy travellers. This specialized bag features flexible solar panels woven directly into the fabric. The panels capture sunlight and seamlessly <b>(6) ______</b> it into electricity, which is stored in a lightweight internal power bank.</p>
+  <p>If a student <b>(7) ______</b> deep into the wilderness where there are no power outlets, this gadget ensures their electronic devices remain operational. Last year, an engineering firm <b>(8) ______</b> a waterproof version using highly durable recycled materials. Today, environmental organisations strongly <b>(9) ______</b> the use of such sustainable products to reduce our overall carbon footprint.</p></div>`:`<div class="stimulus"><h3>The Brave Lifeguard</h3>
   <p>Mr Jackson works as a professional lifeguard at a popular coastal resort. He is highly trained in managing <b>(6) ______</b> and saving people from drowning. Every morning, he keeps a watchful eye on the visitors swimming in the sea. Yesterday afternoon, he suddenly noticed a young boy waving his arms frantically in the deep water.</p>
   <p>Mr Jackson quickly dived into the waves to assist the struggling swimmer. He grabbed the boy and pulled him safely back to the beach. He checked the boy's breathing and provided <b>(7) ______</b> medical care until the paramedics arrived.</p>
   <p>The boy's parents were incredibly grateful to the courageous lifeguard. They thanked him for <b>(8) ______</b> their son's life. Mr Jackson smiled and said he was merely performing his duty. He feels that keeping beachgoers safe is a highly <b>(9) ______</b> occupation.</p></div>`;
+  const opts=isSet2()?P2_OPTS_SET2:P2_OPTS;
   return `<div class="note">Read the text and choose the correct word for each blank.</div>${passage}`+
-    P2_OPTS.map(x=>choiceBlock(x.n,`Choose the correct word for blank (${x.n}).`,x.opts)).join("")+navButtons();
+    opts.map(x=>choiceBlock(x.n,`Choose the correct word for blank (${x.n}).`,x.opts)).join("")+navButtons();
 }
 function renderPart3(){
-  const passage=`<div class="stimulus"><h3>Brave Pupil Saves Classmate from Choking Incident</h3>
+  const passage=isSet2()?`<div class="stimulus"><h3>An Adventure in Mulu National Park</h3>
+  <p>Last March, twelve-year-old Ethan and his family travelled to Sarawak to explore the world-renowned Gunung Mulu National Park. Famous for its massive limestone caves and dense, untouched rainforests, Mulu is a paradise for wilderness explorers. To prepare for this challenging expedition, Ethan’s father bought specialized hiking boots, headlamps, and durable raincoats to shield them from unpredictable tropical downpours.</p>
+  <p>On the second day, guided by a local expert named Encik Rahman, they embarked on a journey to the Deer Cave, which houses one of the largest cave passages on Earth. As they ventured deeper into the subterranean world, Ethan noticed thousands of bats clinging to the high ceilings. The air inside smelled strongly of guano (bat droppings), and the ground was teeming with unique insects that had adapted to total darkness.</p>
+  <p>The highlight of the trek happened at dusk. The family sat quietly outside the cave entrance alongside other tourists. Suddenly, millions of bats emerged from the cave mouth in massive, swirling black columns, resembling columns of smoke dancing across the sky. Encik Rahman explained that this daily phenomenon was the bats leaving to hunt for insects in the surrounding forest. Witnessing this natural spectacle left Ethan completely breathless and gave him a deep respect for wildlife conservation.</p></div>`:`<div class="stimulus"><h3>Brave Pupil Saves Classmate from Choking Incident</h3>
   <p><b>IPOH, Sun</b> – An eleven-year-old schoolboy was praised for his quick actions yesterday when he successfully saved his classmate from a dangerous choking accident during recess at school.</p>
   <p>According to their class teacher, Madam Lim, the incident happened around ten in the morning while the children were having snacks in the school cafeteria. She explained that the victim, Danish, was laughing excitedly at a joke told by his friend while swallowing a large piece of fish cake. Suddenly, the food got stuck in his throat, and he struggled to breathe.</p>
   <p>A school spokesman stated that Danish's classmate, Kit, immediately recognized the life-threatening emergency. Having recently attended a first aid camp organized by the school's Red Crescent Society last month, Kit <b>remained completely calm</b>. He quickly rushed behind Danish and performed abdominal thrusts to clear his airway. Within seconds, the food item was expelled.</p>
   <p>Madam Lim advised all students to sit properly and avoid playing or talking excessively while eating. She highlighted that chewing food thoroughly before swallowing could easily prevent such hazardous accidents from happening in the future.</p></div>`;
-  return `<div class="note">Read the newspaper report and answer Questions 10–14.</div>${passage}`+
-    P3.map(x=>choiceBlock(x.n,x.q,x.opts)).join("")+navButtons();
+  const items=isSet2()?P3_SET2:P3;
+  return `<div class="note">Read the passage and answer Questions 10–14.</div>${passage}`+
+    items.map(x=>choiceBlock(x.n,x.q,x.opts)).join("")+navButtons();
 }
 function renderPart4(){
-  const profiles=`<div class="stimulus"><h3>Holiday Activities</h3>
+  const profiles=isSet2()?`<div class="stimulus"><h3>Recent School Holiday Initiatives</h3>
+    <h4>A • Alistair</h4><p>My family and I joined a conservation expedition to a pristine rainforest reserve in Sarawak. We travelled down the river by kayak and slept in lightweight hammocks protected by mosquito nets. It was a rigorous physical test, and we had to carry heavy safety equipment across muddy terrain. Despite being covered in insect bites, the breathtaking sight of untouched wildlife made it a profoundly rewarding initiative.</p>
+    <h4>B • Beatrice</h4><p>I participated in a youth technology project at a digital design centre in Kuala Lumpur. My teammates and I engineered an eco-friendly solar-powered backpack prototype manufactured entirely from discarded plastic bottles. It was a demanding mental challenge because our smart circuitry required complex troubleshooting. We even presented our creation live to an audience of university lecturers on the final day.</p>
+    <h4>C • Callum</h4><p>I attended an immersive musical programme at a cultural heritage centre in Penang. Instead of watching, we were taught how to play complex polyrhythmic beats using traditional percussion instruments like the kompang and gamelan. Memorising the arrangements without sheet music was a stressful task, but our group performed perfectly during the closing ceremony. Next holiday, I plan to master a traditional wind instrument.</p>
+  </div>`:`<div class="stimulus"><h3>Holiday Activities</h3>
     <h4>A • Melissa</h4><p>My family and I went camping at a rainforest reserve in Pahang last school holidays. We slept in tents and cooked food over a real campfire. It was an amazing adventure, but there were so many mosquitoes, and I got a lot of insect bites! I still want to go back next year because I love being close to wild nature.</p>
     <h4>B • Darren</h4><p>I spent my holidays visiting Pulau Redang with my parents. We went snorkeling in the clear sea every morning. I saw beautiful coral reefs and many colorful sea creatures, including a sea turtle! I love swimming so much that I want to study marine life and become a marine biologist when I grow up.</p>
     <h4>C • Johan</h4><p>I did not go out of town, so I tried indoor rock climbing at a sports mall nearby. The climbing walls were very high and steep, which made it a scary but fun challenge. I had to wear a special safety harness and tight climbing shoes. Next holidays, I hope to try real outdoor climbing on natural rocks.</p>
   </div>`;
-  const qs=P4.map(x=>{
+  const items=isSet2()?P4_SET2:P4;
+  const qs=items.map(x=>{
     const cur=state.answers.objective[x.n-1];
     return `<div class="q"><div class="qnum">Question ${x.n}</div><div class="qtext">${x.q}</div><div class="segment">
       ${["A","B","C"].map(l=>`<button ${isLocked()?"disabled":""} class="segBtn ${cur===l?"active":""}" type="button" data-q="${x.n}" data-value="${l}">${l}</button>`).join("")}
@@ -568,22 +733,28 @@ function renderPart4(){
   return `<div class="note">Choose the person A, B or C who fits each description.</div>${profiles}${qs}${navButtons()}`;
 }
 function renderPart5(){
+  const items=isSet2()?P5_SET2:P5;
   return `<div class="note">Read the descriptions. Type the complete word. The first letter is shown as a hint.</div>`+
-    P5.map((x,i)=>`<div class="wordRow"><div class="wordPrompt"><b>${x.n}.</b> ${x.desc}<div class="wordHint">${x.hint}</div></div>
+    items.map((x,i)=>`<div class="wordRow"><div class="wordPrompt"><b>${x.n}.</b> ${x.desc}<div class="wordHint">${x.hint}</div></div>
       <input ${isLocked()?"disabled":""} class="textAnswer" data-word="${i}" autocomplete="off" spellcheck="false" value="${esc(state.answers.words[i])}" placeholder="Type the complete word"></div>`).join("")+navButtons();
 }
 function renderPart6(){
   const wc=countWords(state.answers.part6);
+  if(isSet2()) return `<div class="examCard">
+    <div class="qnum">Part 6 • 10 marks</div>
+    <div class="qtext">Your school's green club is organizing an upcycling drive this coming Saturday. Write a message to your classmate, Alex, inviting him to join you.</div>
+    <p>In your message, tell Alex:</p>
+    <ul><li>Why his participation is critical for the environment.</li><li>What amazing materials you will be transforming there.</li><li>The exact meeting logistics (time and venue).</li></ul>
+    <p><b>Write about 30–50 words.</b></p>
+    <textarea ${isLocked()?"disabled":""} id="part6Text" class="textAnswer essayBox" placeholder="Write your message here…">${esc(state.answers.part6)}</textarea>
+    <div id="p6Count" class="wordCount ${wc>=30&&wc<=50?"good":wc>0?"warn":""}">${wc} words • target 30–50</div>
+  </div>${navButtons()}`;
   return `<div class="examCard">
     <div class="qnum">Part 6 • 10 marks</div>
     <div class="qtext">You want to invite your classmate, Mark, to attend a traditional musical performance with you this coming Saturday.</div>
     <p>Write Mark a message.</p>
     <p>In your message, tell Mark:</p>
-    <ul>
-      <li>Why you want to go to the performance</li>
-      <li>What traditional instruments you will get to see there</li>
-      <li>Where and what time both of you should meet</li>
-    </ul>
+    <ul><li>Why you want to go to the performance</li><li>What traditional instruments you will get to see there</li><li>Where and what time both of you should meet</li></ul>
     <p><b>Write about 30–50 words.</b></p>
     <textarea ${isLocked()?"disabled":""} id="part6Text" class="textAnswer essayBox" placeholder="Write your message here…">${esc(state.answers.part6)}</textarea>
     <div id="p6Count" class="wordCount ${wc>=30&&wc<=50?"good":wc>0?"warn":""}">${wc} words • target 30–50</div>
@@ -591,6 +762,22 @@ function renderPart6(){
 }
 function renderPart7(){
   const wc=countWords(state.answers.part7);
+  if(isSet2()) return `<div class="examCard">
+    <div class="qnum">Part 7 • 15 marks</div>
+    <div class="qtext">You saw an advertisement for a creative workshop. Write an email to your friend, Ai Ling, analyzing the event and persuading her to register for the session with you.</div>
+    <p><b>Write your email to Ai Ling in about 60–80 words.</b></p>
+    <div class="poster">
+      <h3>🤖 YOUNG INVENTORS FAIR 2026 🤖</h3>
+      <p><b>Discover tomorrow's breakthroughs today at the National Science Centre!</b></p>
+      <div class="posterRow"><div class="posterIcon">⭐</div><div><b>Highlights:</b> Smart Gadgets, Green Energy Prototypes, and AI Masterclasses</div></div>
+      <div class="posterRow"><div class="posterIcon">🎟️</div><div><b>Entry Fee:</b> RM2 per student <span style="font-weight:500">(Extremely limited spaces remaining!)</span></div></div>
+      <div class="posterRow"><div class="posterIcon">📅</div><div><b>Date:</b> 20 Jun 2026 &amp; 21 Jun 2026 <b>(9:00 a.m. – 5:00 p.m.)</b></div></div>
+      <p style="margin:16px 0 0;font-weight:850">Secure your booking online at <b>younginventors2026.com.my</b> before Friday night!</p>
+    </div>
+    <div class="emailHead"><div class="lab">To:</div><div>ai_ling@greatmail.com</div><div class="lab">Subject:</div><div>Let's join the Young Inventors Fair!</div></div>
+    <textarea ${isLocked()?"disabled":""} id="part7Text" class="textAnswer essayBox" placeholder="Write your email here…">${esc(state.answers.part7)}</textarea>
+    <div id="p7Count" class="wordCount ${wc>=60&&wc<=80?"good":wc>0?"warn":""}">${wc} words • target 60–80</div>
+  </div>${navButtons()}`;
   return `<div class="examCard">
     <div class="qnum">Part 7 • 15 marks</div>
     <div class="qtext">You saw an advertisement for an upcoming outdoor camp. Write an email to your friend, Ming, to tell him about it and invite him to register for the camp with you.</div>
@@ -661,7 +848,7 @@ async function submitExam(){
       headers:{"Content-Type":"application/json","apikey":CONFIG.publishableKey},
       body:JSON.stringify({
         pupilCode:state.code,
-        assessmentCode:CONFIG.assessmentCode,
+        assessmentCode:assessmentCodeFor(currentSet),
         objectiveAnswers:state.answers.objective,
         wordCompletionAnswers:state.answers.words.map(x=>String(x||"").trim()),
         part6Answer:state.answers.part6,
@@ -681,6 +868,12 @@ function renderResult(){
   if(!state.result){showHub();return}
   showOnly("resultScreen");$("#timer").classList.add("hidden");$("#resetAttemptBtn").classList.add("hidden");
   const r=state.result,s=r.scores;
+  if(currentSet===1 && Number(s.total)>=CONFIG.set2Threshold){
+    accessState.unlocked=true;
+    accessState.bestSet1Score=Math.max(accessState.bestSet1Score||0,Number(s.total)||0);
+  }
+  updateSetLabels();
+  if($("#printResultTitle")) $("#printResultTitle").textContent=`UPDLP English Year 6 — Set ${currentSet} — 2026 Result`;
   $("#totalScore").textContent=s.total;
   $("#resultName").textContent=r.pupil?.name||state.code;
   $("#resultClass").textContent=r.pupil?.class||"";
@@ -692,7 +885,14 @@ function renderResult(){
   const w=r.writing||{};
   $("#writingFeedback").innerHTML=`
     <div class="feedbackCard"><h3>✉️ Part 6 Feedback</h3>${feedbackHtml(w.part6)}</div>
-    <div class="feedbackCard"><h3>🏕️ Part 7 Feedback</h3>${feedbackHtml(w.part7)}</div>`;
+    <div class="feedbackCard"><h3>📝 Part 7 Feedback</h3>${feedbackHtml(w.part7)}</div>`;
+  const action=$("#resultActionSlot");
+  if(action){
+    if(currentSet===1 && Number(s.total)<CONFIG.set2Threshold) action.innerHTML=`<button class="primary" type="button" onclick="reattemptCurrentSet()">↻ Reattempt Set 1</button>`;
+    else if(currentSet===1) action.innerHTML=`<button class="primary" type="button" onclick="openSet2Confirm()">UPDLP English • Set 2 →</button>`;
+    else action.innerHTML=`<button class="primary" type="button" onclick="reattemptCurrentSet()">↻ Reattempt Set 2</button>`;
+  }
+  refreshAccessStatus(state.code,true).then(()=>{updateSet2UI();maybeShowUnlockPopup();});
 }
 function feedbackHtml(p){
   if(!p||!p.feedback)return `<div class="feedbackLine">No writing feedback available.</div>`;
@@ -711,12 +911,24 @@ function returnToStart(){
 }
 
 let leaderboardMode="result";
+let leaderboardSet=currentSet;
 function setLeaderboardMode(mode){
   leaderboardMode=mode==="best"?"best":"result";
   $("#leaderTabResult")?.classList.toggle("active",leaderboardMode==="result");
   $("#leaderTabBest")?.classList.toggle("active",leaderboardMode==="best");
 }
-async function openLeaderboard(mode=leaderboardMode){
+function setLeaderboardSet(setNo){
+  setNo=Number(setNo)===2?2:1;
+  if(setNo===2 && !accessState.unlocked){toast("Set 2 leaderboard is only available after unlocking Set 2.");return false}
+  leaderboardSet=setNo;
+  $("#leaderSet1")?.classList.toggle("active",leaderboardSet===1);
+  $("#leaderSet2")?.classList.toggle("active",leaderboardSet===2);
+  if($("#leaderTitle")) $("#leaderTitle").textContent=`🏆 Leaderboard • Set ${leaderboardSet}`;
+  return true;
+}
+async function openLeaderboard(mode=leaderboardMode,setNo=currentSet){
+  if(setNo===2 && !accessState.checked) await refreshAccessStatus(state.code||$("#pupilCode")?.value.trim(),true);
+  if(!setLeaderboardSet(setNo)) return;
   setLeaderboardMode(mode);
   $("#leaderModal").classList.remove("hidden");
   $("#leaderContent").innerHTML=`<span class="spinner"></span>Loading leaderboard…`;
@@ -725,7 +937,8 @@ async function openLeaderboard(mode=leaderboardMode){
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":CONFIG.publishableKey},
       body:JSON.stringify({
-        assessmentCode:CONFIG.assessmentCode,
+        assessmentCode:assessmentCodeFor(leaderboardSet),
+        pupilCode:leaderboardSet===2?(state.code||$("#pupilCode")?.value.trim()||""):undefined,
         limit:30,
         includeTesters:$("#showTesters")?.checked===true
       })
@@ -733,13 +946,13 @@ async function openLeaderboard(mode=leaderboardMode){
     const data=await res.json();
     if(!res.ok||!data.success) throw new Error(data.error||"Could not load leaderboard");
 
-    const me=state.result?.pupil;
+    const me=state.result?.pupil||accessState.pupil;
     const rows=leaderboardMode==="best"
       ?(data.bestAttemptLeaderboard||data.leaderboard||[])
       :(data.resultLeaderboard||data.leaderboard||[]);
 
     if(!rows.length){
-      $("#leaderContent").innerHTML=`<div class="note">No completed results yet.</div>`;
+      $("#leaderContent").innerHTML=`<div class="note">No completed Set ${leaderboardSet} results yet.</div>`;
       return;
     }
 
@@ -759,16 +972,28 @@ function closeLeaderboard(){$("#leaderModal").classList.add("hidden")}
 $("#startBtn").addEventListener("click",startOrResume);
 $("#clearBtn").addEventListener("click",clearSaved);
 $("#resetAttemptBtn").addEventListener("click",clearSaved);
-$("#leaderBtnTop").addEventListener("click",()=>openLeaderboard());
-$("#showTesters").addEventListener("change",()=>openLeaderboard(leaderboardMode));
-$("#leaderTabResult").addEventListener("click",()=>openLeaderboard("result"));
-$("#leaderTabBest").addEventListener("click",()=>openLeaderboard("best"));
+$("#set1BackBtn").addEventListener("click",()=>switchSet(1));
+$("#leaderBtnTop").addEventListener("click",()=>openLeaderboard(leaderboardMode,currentSet));
+$("#showTesters").addEventListener("change",()=>openLeaderboard(leaderboardMode,leaderboardSet));
+$("#leaderTabResult").addEventListener("click",()=>openLeaderboard("result",leaderboardSet));
+$("#leaderTabBest").addEventListener("click",()=>openLeaderboard("best",leaderboardSet));
+$("#leaderSet1").addEventListener("click",()=>openLeaderboard(leaderboardMode,1));
+$("#leaderSet2").addEventListener("click",()=>openLeaderboard(leaderboardMode,2));
 $("#pupilCode").addEventListener("keydown",e=>{if(e.key==="Enter")startOrResume()});
 window.addEventListener("beforeunload",saveState);
 
-if(state.submitted&&state.result){$("#pupilCode").value=state.code;renderResult()}
-else if(state.startedAt&&state.code){startTimer();openPart(state.currentPart||1)}
-else renderStart();
+async function initApp(){
+  updateSetLabels();
+  if(state.code) await refreshAccessStatus(state.code,true);
+  if(currentSet===2 && !accessState.unlocked){
+    currentSet=1;localStorage.setItem(ACTIVE_SET_KEY,"1");state=loadState(1);
+    if(state.code) await refreshAccessStatus(state.code,true);
+  }
+  if(state.submitted&&state.result){$("#pupilCode").value=state.code;renderResult()}
+  else if(state.startedAt&&state.code){startTimer();openPart(state.currentPart||1)}
+  else renderStart();
+}
+initApp();
 </script>
 </body>
 </html>
