@@ -156,6 +156,12 @@ h2{margin:0}
 .setTag{display:inline-block;margin-top:10px;padding:6px 11px;border-radius:999px;background:rgba(255,200,87,.14);border:1px solid rgba(255,200,87,.35);color:var(--gold);font-size:12px;font-weight:950;letter-spacing:.8px;text-transform:uppercase}
 .leaderSetTabs{display:flex;gap:8px;margin:0 0 10px}.leaderSetTab{flex:1;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:rgba(255,255,255,.04);color:var(--muted);font-weight:900}.leaderSetTab.active{background:rgba(255,200,87,.16);border-color:rgba(255,200,87,.42);color:#ffe5a6}
 .unlockBox{text-align:center}.unlockIcon{font-size:52px;margin:4px 0 10px}.unlockBox p{color:var(--muted);line-height:1.55}
+.reportFloat{position:fixed;z-index:70;right:18px;top:76px;width:46px;height:46px;border-radius:50%;border:2px solid rgba(255,255,255,.9);background:#e53935;color:#fff;font-size:27px;font-weight:1000;line-height:1;box-shadow:0 10px 30px rgba(229,57,53,.38);display:flex;align-items:center;justify-content:center}
+.reportFloat:hover{transform:translateY(-1px);background:#ff4b47}.reportFloat:focus{outline:3px solid rgba(255,255,255,.3);outline-offset:2px}
+.reportIntro{color:var(--muted);line-height:1.55;margin-top:0}.reportMeta{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}.reportMeta .pill{font-size:12px}
+.reportReason{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;background:#081827;color:var(--text);font:inherit}
+.reportComment{width:100%;min-height:115px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;background:#081827;color:var(--text);font:inherit;line-height:1.5}
+.reportStatus{margin-top:10px}.reportStatus .success,.reportStatus .error{margin-top:0}
 .printOnly{display:none}
 footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
 @media(max-width:800px){
@@ -177,6 +183,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
   .panel{padding:16px}
   .timer{font-size:13px}
   .set2Float{right:8px;min-width:126px;padding:10px 11px}.set2Float strong{font-size:11px}.set2Float span{font-size:15px}
+  .reportFloat{right:10px;top:70px;width:42px;height:42px;font-size:24px}
 }
 @media print{
   body{background:#fff;color:#000}
@@ -312,6 +319,7 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
 </div>
 
 <button id="set2FloatBtn" class="set2Float hidden" type="button" onclick="openSet2Confirm()"><strong>UPDLP English</strong><span>Set 2</span></button>
+<button id="questionReportBtn" class="reportFloat hidden noPrint" type="button" title="Report or review this writing question" aria-label="Report or review this writing question" onclick="openQuestionReport()">!</button>
 
 <div id="set2ConfirmModal" class="modal hidden">
   <div class="modalBox" style="width:min(520px,100%)">
@@ -330,6 +338,55 @@ footer{text-align:center;color:#748ba6;font-size:12px;margin-top:28px}
   </div>
 </div>
 
+<div id="part5UpdateModal" class="modal hidden">
+  <div class="modalBox" style="width:min(560px,100%)">
+    <div class="modalHead">
+      <h2 style="flex:1">Part 5 has been updated</h2>
+      <button class="iconBtn" type="button" onclick="closePart5UpdateModal()">✕</button>
+    </div>
+    <p style="color:var(--muted);line-height:1.6">Set 2 Part 5 now uses environment-themed words. Your saved Part 5 answers were cleared so they will not be marked against the new questions.</p>
+    <div class="note"><b>Your other work has been kept.</b> Parts 1–4, Part 6, Part 7, your current position, and your remaining exam time are unchanged.</div>
+    <p style="line-height:1.55"><b>Please answer Part 5 again before you submit the exam.</b></p>
+    <div class="navRow">
+      <button class="ghost" type="button" onclick="closePart5UpdateModal()">Continue where I was</button>
+      <button class="primary" type="button" onclick="goToUpdatedPart5()">Go to Part 5</button>
+    </div>
+  </div>
+</div>
+
+<div id="questionReportModal" class="modal hidden">
+  <div class="modalBox" style="width:min(600px,100%)">
+    <div class="modalHead">
+      <h2 id="questionReportTitle" style="flex:1">Report / Review Part 6</h2>
+      <button class="iconBtn" type="button" onclick="closeQuestionReport()">✕</button>
+    </div>
+    <p class="reportIntro">Tell your teacher if this writing task is too hard, uses vocabulary that is too advanced, is confusing, or has another problem. Your name, class, exam set and part will be included automatically.</p>
+    <div class="reportMeta"><span id="reportSetPill" class="pill">Set 1</span><span id="reportPartPill" class="pill">Part 6</span></div>
+    <div class="field">
+      <label for="reportReason">What would you like to report?</label>
+      <select id="reportReason" class="reportReason">
+        <option value="">Choose one</option>
+        <option>The question is too hard</option>
+        <option>The vocabulary is too advanced</option>
+        <option>The instructions are confusing</option>
+        <option>I am not sure what I need to write</option>
+        <option>The question seems unclear or incorrect</option>
+        <option>Something is not working</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="reportComment">Tell your teacher more (optional)</label>
+      <textarea id="reportComment" class="reportComment" maxlength="1500" placeholder="Example: I understand the topic, but I do not understand the word ..."></textarea>
+    </div>
+    <div id="questionReportStatus" class="reportStatus"></div>
+    <div class="navRow">
+      <button class="ghost" type="button" onclick="closeQuestionReport()">Cancel</button>
+      <button id="sendQuestionReportBtn" class="primary" type="button" onclick="sendQuestionReport()">Send to Teacher</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast hidden"></div>
 
 <script>
@@ -340,6 +397,7 @@ const CONFIG = {
   durationMs: 75 * 60 * 1000,
   set2Threshold: 41
 };
+const CONTENT_REVISIONS = {set2Part5:"environment-theme-v1"};
 const STORAGE_KEYS = {1:"updpl_y6_2026_exam_v1",2:"updpl_y6_2026_exam_set2_v1"};
 const ACTIVE_SET_KEY = "updpl_y6_2026_active_set";
 let currentSet = Number(localStorage.getItem(ACTIVE_SET_KEY)||1)===2 ? 2 : 1;
@@ -352,9 +410,9 @@ const PARTS = [
   {id:2,icon:"🛟",title:"Language in Context",marks:4,desc:"Questions 6–9 • Complete the lifeguard text."},
   {id:3,icon:"📰",title:"Reading Comprehension",marks:5,desc:"Questions 10–14 • Read the newspaper report."},
   {id:4,icon:"🧭",title:"Matching Information",marks:6,desc:"Questions 15–20 • Match pupils A, B or C."},
-  {id:5,icon:"🔤",title:"Word Completion",marks:5,desc:"Questions 21–25 • Emergency and safety words."},
-  {id:6,icon:"✉️",title:"Short Communicative Writing",marks:10,desc:"Write a 30–50 word message to Mark."},
-  {id:7,icon:"🏕️",title:"Longer Communicative Message",marks:15,desc:"Write a 60–80 word email to Ming."}
+  {id:5,icon:"🔤",title:"Word Completion",marks:5,desc:"Questions 21–25 • Complete the words from their descriptions."},
+  {id:6,icon:"✉️",title:"Short Communicative Writing",marks:10,desc:"Write a 30–50 word message."},
+  {id:7,icon:"🏕️",title:"Longer Communicative Message",marks:15,desc:"Write a 60–80 word email."}
 ];
 
 const P1 = [
@@ -455,11 +513,11 @@ const P4_SET2 = [
 ];
 
 const P5_SET2 = [
-  {n:21,first:"p",hint:"p _ _ _ _ _ _ _ _",desc:"An international spelling variant for a dynamic, public display or scheduled group activity."},
-  {n:22,first:"e",hint:"e _ _ _ _ _ _ _ _ _",desc:"A violent and sudden geological event that causes severe earth tremors and structural ruin."},
-  {n:23,first:"j",hint:"j _ _ _ _ _ _ _ _",desc:"Ornamental decorative items like rings or necklaces made from precious metals or stones."},
-  {n:24,first:"f",hint:"f _ _ _ _ _ _",desc:"A systematic structure or plant where raw materials are processed into consumer goods."},
-  {n:25,first:"p",hint:"p _ _ _ _ _ _ _ _",desc:"Liquid or solid waste materials that cause environmental damage when released carelessly."}
+  {n:21,first:"r",hint:"r _ _ _ _ _ _",desc:"To use old materials again to make new things."},
+  {n:22,first:"p",hint:"p _ _ _ _ _ _ _ _",desc:"Harmful substances that make the air, water or land dirty."},
+  {n:23,first:"w",hint:"w _ _ _ _ _ _ _",desc:"Animals and plants that live naturally in the environment."},
+  {n:24,first:"p",hint:"p _ _ _ _ _ _",desc:"A material used to make things such as bottles and bags."},
+  {n:25,first:"c",hint:"c _ _ _ _ _ _",desc:"The usual weather conditions of a place over a long time."}
 ];
 
 
@@ -477,9 +535,11 @@ function blankState(code=""){
       part6:"",
       part7:""
     },
-    result:null
+    result:null,
+    set2Part5Revision:currentSet===2?CONTENT_REVISIONS.set2Part5:null
   };
 }
+let pendingPart5MigrationNotice=false;
 let state = loadState(currentSet);
 let timerHandle = null;
 
@@ -489,6 +549,18 @@ function loadState(setNo=currentSet){
     if(raw && raw.answers && Array.isArray(raw.answers.objective) && raw.answers.objective.length===20){
       if(!raw.currentPart || raw.currentPart<1 || raw.currentPart>7) raw.currentPart=1;
       raw.setNo=setNo;
+
+      // One-time Set 2 Part 5 migration safeguard.
+      // Older active attempts used a different Part 5 word set. Clear only those
+      // five answers so they can never be submitted against the new answer key.
+      if(setNo===2 && raw.startedAt && !raw.submitted && raw.set2Part5Revision!==CONTENT_REVISIONS.set2Part5){
+        const oldWords=Array.isArray(raw.answers.words)?raw.answers.words:[];
+        const hadSavedPart5Answers=oldWords.some(v=>String(v??"").trim().length>0);
+        raw.answers.words=Array(5).fill("");
+        raw.set2Part5Revision=CONTENT_REVISIONS.set2Part5;
+        localStorage.setItem(storageKeyFor(setNo),JSON.stringify(raw));
+        if(hadSavedPart5Answers) pendingPart5MigrationNotice=true;
+      }
       return raw;
     }
   }catch{}
@@ -498,6 +570,7 @@ function saveState(){ state.setNo=currentSet; localStorage.setItem(storageKeyFor
 function $(s){return document.querySelector(s)}
 function showOnly(id){
   ["startScreen","hubScreen","partScreen","reviewScreen","resultScreen"].forEach(x=>$("#"+x).classList.toggle("hidden",x!==id));
+  if(id!=="partScreen") $("#questionReportBtn")?.classList.add("hidden");
   window.scrollTo({top:0,behavior:"smooth"});
 }
 function toast(msg){
@@ -552,6 +625,16 @@ function openSet2Confirm(){
 }
 function closeSet2Confirm(){$("#set2ConfirmModal").classList.add("hidden")}
 function closeUnlockModal(){$("#unlockModal").classList.add("hidden")}
+function closePart5UpdateModal(){$("#part5UpdateModal")?.classList.add("hidden")}
+function showPendingPart5MigrationNotice(){
+  if(!pendingPart5MigrationNotice) return;
+  pendingPart5MigrationNotice=false;
+  $("#part5UpdateModal")?.classList.remove("hidden");
+}
+function goToUpdatedPart5(){
+  closePart5UpdateModal();
+  if(currentSet===2 && state.startedAt) openPart(5);
+}
 function confirmSwitchToSet2(){closeSet2Confirm();switchSet(2)}
 function switchSet(setNo){
   setNo=Number(setNo)===2?2:1;
@@ -562,6 +645,7 @@ function switchSet(setNo){
   state=loadState(currentSet);
   if(!state.code && previousCode){state.code=previousCode;saveState()}
   renderStart();
+  showPendingPart5MigrationNotice();
 }
 function maybeShowUnlockPopup(){
   if(currentSet!==1 || !state.result || Number(state.result?.scores?.total||0)<CONFIG.set2Threshold || !accessState.unlocked) return;
@@ -618,6 +702,7 @@ function renderStart(){
   $("#pupilBadge").classList.add("hidden");
   $("#resetAttemptBtn").classList.add("hidden");
   $("#timeOverlay").classList.add("hidden");
+  $("#questionReportBtn")?.classList.add("hidden");
 }
 function startTimer(){
   stopTimer();
@@ -667,6 +752,7 @@ function openPart(id){
   $("#progressFill").style.width=`${(id/7)*100}%`;
   $("#partContent").innerHTML=renderPart(id);
   bindPart(id);
+  updateQuestionReportButton(id);
   renderLockedNotice();
 }
 function renderPart(id){
@@ -734,7 +820,7 @@ function renderPart4(){
 }
 function renderPart5(){
   const items=isSet2()?P5_SET2:P5;
-  return `<div class="note">Read the descriptions. Type the complete word. The first letter is shown as a hint.</div>`+
+  return `<div class="note">Read each description. Type the correct word. The first letter is given.</div>`+
     items.map((x,i)=>`<div class="wordRow"><div class="wordPrompt"><b>${x.n}.</b> ${x.desc}<div class="wordHint">${x.hint}</div></div>
       <input ${isLocked()?"disabled":""} class="textAnswer" data-word="${i}" autocomplete="off" spellcheck="false" value="${esc(state.answers.words[i])}" placeholder="Type the complete word"></div>`).join("")+navButtons();
 }
@@ -742,9 +828,10 @@ function renderPart6(){
   const wc=countWords(state.answers.part6);
   if(isSet2()) return `<div class="examCard">
     <div class="qnum">Part 6 • 10 marks</div>
-    <div class="qtext">Your school's green club is organizing an upcycling drive this coming Saturday. Write a message to your classmate, Alex, inviting him to join you.</div>
+    <div class="qtext">Your school's Green Club is organising an <b>upcycling activity</b> this Saturday. Pupils will make new things from used materials.</div>
+    <p>Write a message to your classmate, Alex, and invite him to join you.</p>
     <p>In your message, tell Alex:</p>
-    <ul><li>Why his participation is critical for the environment.</li><li>What amazing materials you will be transforming there.</li><li>The exact meeting logistics (time and venue).</li></ul>
+    <ul><li>why the activity is good for the environment</li><li>what materials you will reuse</li><li>where and when you will meet</li></ul>
     <p><b>Write about 30–50 words.</b></p>
     <textarea ${isLocked()?"disabled":""} id="part6Text" class="textAnswer essayBox" placeholder="Write your message here…">${esc(state.answers.part6)}</textarea>
     <div id="p6Count" class="wordCount ${wc>=30&&wc<=50?"good":wc>0?"warn":""}">${wc} words • target 30–50</div>
@@ -764,15 +851,17 @@ function renderPart7(){
   const wc=countWords(state.answers.part7);
   if(isSet2()) return `<div class="examCard">
     <div class="qnum">Part 7 • 15 marks</div>
-    <div class="qtext">You saw an advertisement for a creative workshop. Write an email to your friend, Ai Ling, analyzing the event and persuading her to register for the session with you.</div>
-    <p><b>Write your email to Ai Ling in about 60–80 words.</b></p>
+    <div class="qtext">You saw an advertisement for the <b>Young Inventors Fair 2026</b>.</div>
+    <p>Write an email to your friend, Ai Ling. Tell her about the event, explain why you think it is interesting, and invite her to register with you.</p>
+    <p><b>Write your email in about 60–80 words.</b></p>
     <div class="poster">
       <h3>🤖 YOUNG INVENTORS FAIR 2026 🤖</h3>
-      <p><b>Discover tomorrow's breakthroughs today at the National Science Centre!</b></p>
-      <div class="posterRow"><div class="posterIcon">⭐</div><div><b>Highlights:</b> Smart Gadgets, Green Energy Prototypes, and AI Masterclasses</div></div>
-      <div class="posterRow"><div class="posterIcon">🎟️</div><div><b>Entry Fee:</b> RM2 per student <span style="font-weight:500">(Extremely limited spaces remaining!)</span></div></div>
-      <div class="posterRow"><div class="posterIcon">📅</div><div><b>Date:</b> 20 Jun 2026 &amp; 21 Jun 2026 <b>(9:00 a.m. – 5:00 p.m.)</b></div></div>
-      <p style="margin:16px 0 0;font-weight:850">Secure your booking online at <b>younginventors2026.com.my</b> before Friday night!</p>
+      <p><b>Come and discover exciting new inventions at the National Science Centre!</b></p>
+      <div class="posterRow"><div class="posterIcon">⭐</div><div><b>Things to see and do:</b> Smart Gadgets, Green Energy Inventions, and AI Workshops</div></div>
+      <div class="posterRow"><div class="posterIcon">🎟️</div><div><b>Entry Fee:</b> RM2 per student <span style="font-weight:500">(Limited places available!)</span></div></div>
+      <div class="posterRow"><div class="posterIcon">📅</div><div><b>Dates:</b> 20 &amp; 21 June 2026</div></div>
+      <div class="posterRow"><div class="posterIcon">🕘</div><div><b>Time:</b> 9.00 a.m. – 5.00 p.m.</div></div>
+      <p style="margin:16px 0 0;font-weight:850">Book online at <b>younginventors2026.com.my</b> before Friday night.</p>
     </div>
     <div class="emailHead"><div class="lab">To:</div><div>ai_ling@greatmail.com</div><div class="lab">Subject:</div><div>Let's join the Young Inventors Fair!</div></div>
     <textarea ${isLocked()?"disabled":""} id="part7Text" class="textAnswer essayBox" placeholder="Write your email here…">${esc(state.answers.part7)}</textarea>
@@ -795,6 +884,58 @@ function renderPart7(){
     <div id="p7Count" class="wordCount ${wc>=60&&wc<=80?"good":wc>0?"warn":""}">${wc} words • target 60–80</div>
   </div>${navButtons()}`;
 }
+function updateQuestionReportButton(part=state.currentPart){
+  const visible=Number(part)===6||Number(part)===7;
+  $("#questionReportBtn")?.classList.toggle("hidden",!visible);
+}
+function openQuestionReport(){
+  const part=Number(state.currentPart||0);
+  if(part!==6&&part!==7){toast("Reports are available for Part 6 and Part 7.");return}
+  $("#questionReportTitle").textContent=`Report / Review Part ${part}`;
+  $("#reportSetPill").textContent=`Set ${currentSet}`;
+  $("#reportPartPill").textContent=`Part ${part}`;
+  $("#reportReason").value="";
+  $("#reportComment").value="";
+  $("#questionReportStatus").innerHTML="";
+  $("#sendQuestionReportBtn").disabled=false;
+  $("#questionReportModal").classList.remove("hidden");
+}
+function closeQuestionReport(){
+  $("#questionReportModal").classList.add("hidden");
+}
+async function sendQuestionReport(){
+  const part=Number(state.currentPart||0);
+  const reason=$("#reportReason").value.trim();
+  const comment=$("#reportComment").value.trim();
+  const status=$("#questionReportStatus");
+  const btn=$("#sendQuestionReportBtn");
+  if(part!==6&&part!==7){status.innerHTML=`<div class="error">This report is only available for Part 6 and Part 7.</div>`;return}
+  if(!state.code){status.innerHTML=`<div class="error">Your pupil code is missing. Please return to the start screen and log in again.</div>`;return}
+  if(!reason){status.innerHTML=`<div class="error">Choose what you would like to report.</div>`;return}
+  btn.disabled=true;
+  status.innerHTML=`<div class="note"><span class="spinner"></span>Sending your report…</div>`;
+  try{
+    const res=await fetch(`${CONFIG.baseUrl}/functions/v1/submit-updlp-question-report`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":CONFIG.publishableKey},
+      body:JSON.stringify({
+        pupilCode:state.code,
+        assessmentCode:assessmentCodeFor(currentSet),
+        part,
+        reason,
+        comment
+      })
+    });
+    const data=await res.json().catch(()=>({success:false,error:"Unreadable server response"}));
+    if(!res.ok||!data.success) throw new Error(data.error||"Could not send your report");
+    status.innerHTML=`<div class="success"><b>Sent to your teacher.</b><br><span style="font-size:13px">Thank you for reviewing this question.</span></div>`;
+    setTimeout(()=>{closeQuestionReport();toast("Report sent to your teacher.")},900);
+  }catch(err){
+    btn.disabled=false;
+    status.innerHTML=`<div class="error"><b>Report not sent.</b><br>${esc(err.message||"Please check your internet connection and try again.")}</div>`;
+  }
+}
+
 function navButtons(){
   const id=state.currentPart||1;
   const left=id>1
@@ -849,6 +990,7 @@ async function submitExam(){
       body:JSON.stringify({
         pupilCode:state.code,
         assessmentCode:assessmentCodeFor(currentSet),
+        contentRevision:currentSet===2?CONTENT_REVISIONS.set2Part5:null,
         objectiveAnswers:state.answers.objective,
         wordCompletionAnswers:state.answers.words.map(x=>String(x||"").trim()),
         part6Answer:state.answers.part6,
@@ -992,6 +1134,7 @@ async function initApp(){
   if(state.submitted&&state.result){$("#pupilCode").value=state.code;renderResult()}
   else if(state.startedAt&&state.code){startTimer();openPart(state.currentPart||1)}
   else renderStart();
+  showPendingPart5MigrationNotice();
 }
 initApp();
 </script>
